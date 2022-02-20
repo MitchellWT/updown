@@ -10,6 +10,6 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 @EnableWebSecurity
 class SecurityConfig: WebSecurityConfigurerAdapter() {
     override fun configure(web: WebSecurity) {
-        web.ignoring().antMatchers(HttpMethod.GET)
+        web.ignoring().antMatchers(HttpMethod.GET).antMatchers(HttpMethod.POST)
     }
 }
