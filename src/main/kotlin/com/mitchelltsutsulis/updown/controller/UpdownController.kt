@@ -3,9 +3,7 @@ package com.mitchelltsutsulis.updown.controller
 import com.mitchelltsutsulis.updown.ResponseBody
 import com.mitchelltsutsulis.updown.config.ApiConfig
 import com.mitchelltsutsulis.updown.handler.UpdownHandler
-import org.springframework.core.io.InputStreamResource
 import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
@@ -13,7 +11,6 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.multipart.MultipartFile
 import java.io.File
-import java.io.FileInputStream
 import java.io.IOException
 
 @RestController
@@ -37,12 +34,13 @@ class UpdownController(val updownHandler: UpdownHandler, val apiConfig: ApiConfi
     }
 
     @GetMapping("/download")
-    fun download(@RequestParam("filename") filename: String): ResponseEntity<Any> {
+    fun download(@RequestParam("filename") filename: String): Any {
         val serverFile = File(apiConfig.fileStoragePath + filename)
         if (!serverFile.exists()) {
-            // TODO: provide more information in response
-            return ResponseEntity.notFound()
-                .build()
+            val resBody = ResponseBody("Download file not found!")
+            return ResponseEntity<ResponseBody>(resBody, HttpStatus.NOT_FOUND)
         }
 
+        return updownHandler.downloadFile(serverFile)
+    }
 }
