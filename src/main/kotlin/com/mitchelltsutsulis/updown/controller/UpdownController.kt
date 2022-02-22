@@ -1,9 +1,10 @@
 package com.mitchelltsutsulis.updown.controller
 
+import com.mitchelltsutsulis.updown.ResponseBody
 import com.mitchelltsutsulis.updown.config.ApiConfig
-import org.apache.tomcat.util.http.fileupload.IOUtils
-import org.springframework.core.io.ByteArrayResource
+import com.mitchelltsutsulis.updown.handler.UpdownHandler
 import org.springframework.core.io.InputStreamResource
+import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
@@ -13,30 +14,26 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.multipart.MultipartFile
 import java.io.File
 import java.io.FileInputStream
-import java.io.FileOutputStream
-import java.nio.file.Files
+import java.io.IOException
 
 @RestController
-class UpdownController(val apiConfig: ApiConfig) {
+class UpdownController(val updownHandler: UpdownHandler, val apiConfig: ApiConfig) {
     @PostMapping("/upload")
-    fun upload(@RequestParam("file") uploadFile: MultipartFile): String {
-        val serverDirectory = File(apiConfig.fileStoragePath)
-        val serverFile = File(apiConfig.fileStoragePath + uploadFile.originalFilename)
-        if (!serverDirectory.exists() && !serverDirectory.mkdirs()) {
-            // TODO: replace with proper response object
-            return "ERROR DO NOT HAVE PERMISSION TO WRITE TO DIR!"
+    fun upload(@RequestParam("file") uploadFile: MultipartFile): ResponseEntity<ResponseBody> {
+        val serverDir = File(apiConfig.fileStoragePath)
+        val serverFile = File(serverDir.absolutePath + "/" + uploadFile.originalFilename)
+
+        if (!serverDir.exists() && !serverDir.mkdirs()) {
+            val resBody = ResponseBody("Server is unable to create upload dir!")
+            return ResponseEntity<ResponseBody>(resBody, HttpStatus.INTERNAL_SERVER_ERROR)
         }
-        if (!serverFile.createNewFile() || !serverFile.canWrite()) {
-            // TODO: replace with proper response object
-            return "ERROR UNABLE TO CREATE FILE!"
+        val created = try { serverFile.createNewFile() } catch (ioe: IOException) { false }
+        if (!created || !serverFile.canWrite()) {
+            val resBody = ResponseBody("Server is unable to create file!")
+            return ResponseEntity<ResponseBody>(resBody, HttpStatus.INTERNAL_SERVER_ERROR)
         }
 
-        val fileOut = FileOutputStream(serverFile)
-        fileOut.write(uploadFile.bytes)
-        fileOut.close()
-
-        // TODO: replace with proper response object
-        return "FILE UPLOADED!"
+        return updownHandler.uploadFile(serverFile, uploadFile)
     }
 
     @GetMapping("/download")
