@@ -22,15 +22,15 @@ class UpdownController(val updownHandler: UpdownHandler, val apiConfig: ApiConfi
     fun upload(@RequestParam("file") uploadFile: MultipartFile): ResponseEntity<ResponseBody> {
         val serverDir = File(apiConfig.fileStoragePath)
         val serverFile = File(serverDir.absolutePath + "/" + uploadFile.originalFilename)
-
         if (!serverDir.exists() && !serverDir.mkdirs()) {
             val resBody = ResponseBody("Server is unable to create upload dir!")
-            return ResponseEntity<ResponseBody>(resBody, HttpStatus.INTERNAL_SERVER_ERROR)
+            return ResponseEntity(resBody, HttpStatus.INTERNAL_SERVER_ERROR)
         }
+
         val created = try { serverFile.createNewFile() } catch (ioe: IOException) { false }
         if (!created || !serverFile.canWrite()) {
             val resBody = ResponseBody("Server is unable to create file!")
-            return ResponseEntity<ResponseBody>(resBody, HttpStatus.INTERNAL_SERVER_ERROR)
+            return ResponseEntity(resBody, HttpStatus.INTERNAL_SERVER_ERROR)
         }
 
         return updownHandler.uploadFile(serverFile, uploadFile)
@@ -45,11 +45,4 @@ class UpdownController(val updownHandler: UpdownHandler, val apiConfig: ApiConfi
                 .build()
         }
 
-        // REFERENCE: https://stackoverflow.com/questions/35680932/download-a-file-from-spring-boot-rest-service
-        val fileResource = InputStreamResource(FileInputStream(serverFile))
-        return ResponseEntity.ok()
-            .contentLength(serverFile.length())
-            .contentType(MediaType.APPLICATION_OCTET_STREAM)
-            .body(fileResource)
-    }
 }
