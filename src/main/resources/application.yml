@@ -4,6 +4,4 @@ spring:
             max-file-size: 10MB
 
 api:
-    file:
-        storage:
-            path: /opt/updown/storage/
+    file-storage-path: /opt/updown/storage/
