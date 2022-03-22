@@ -1,6 +1,5 @@
-package com.mitchelltsutsulis.updown.handler
+package com.mitchelltsutsulis.updown
 
-import com.mitchelltsutsulis.updown.ResponseBody
 import org.springframework.core.io.InputStreamResource
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
@@ -14,14 +13,13 @@ import java.io.FileOutputStream
 
 @Component
 class UpdownHandler {
-    fun uploadFile(serverFile: File, uploadFile: MultipartFile): ResponseEntity<ResponseBody> {
+    fun uploadFile(serverFile: File, uploadFile: MultipartFile): ResponseEntity<String> {
         val serverFileOut = FileOutputStream(serverFile)
-        val resBody = ResponseBody("File has been uploaded!")
 
         serverFileOut.write(uploadFile.bytes)
         serverFileOut.close()
 
-        return ResponseEntity(resBody, HttpStatus.OK)
+        return ResponseEntity("File has been uploaded!", HttpStatus.OK)
     }
 
     fun downloadFile(serverFile: File): ResponseEntity<InputStreamResource> {
